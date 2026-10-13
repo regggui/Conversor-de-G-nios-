@@ -33,7 +33,38 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         projectDir = new File(getFilesDir(), "imported_project");
-        showHome();
+        if (hasBundledSite()) {
+            openBundledSite();
+        } else {
+            showHome();
+        }
+    }
+
+    private boolean hasBundledSite() {
+        try (InputStream in = getAssets().open("site/index.html")) {
+            return in != null;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private void openBundledSite() {
+        LinearLayout page = verticalLayout();
+        page.addView(label("Projeto HTML instalado", 14));
+        page.addView(button("← Voltar", this::showHome));
+        WebView web = new WebView(this);
+        WebSettings settings = web.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        web.setWebViewClient(new WebViewClient());
+        web.setWebChromeClient(new WebChromeClient());
+        page.addView(web, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        setContentView(page);
+        web.loadUrl("file:///android_asset/site/index.html");
     }
 
     private int dp(float n) {
