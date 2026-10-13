@@ -30,9 +30,27 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         projectDir = new File(getFilesDir(), "imported_project");
-        showHome();
+        if (hasBundledProject()) openBundledProject(); else showHome();
     }
 
+    private boolean hasBundledProject() {
+        try { String[] entries = getAssets().list("site"); return entries != null && entries.length > 0 && assetIndexExists(); }
+        catch (Exception e) { return false; }
+    }
+    private boolean assetIndexExists() {
+        try (InputStream in = getAssets().open("site/index.html")) { return true; }
+        catch (IOException e) { return false; }
+    }
+    private void openBundledProject() {
+        preview = new WebView(this);
+        WebSettings s = preview.getSettings();
+        s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
+        s.setAllowFileAccess(true); s.setAllowContentAccess(true);
+        preview.setWebViewClient(new WebViewClient());
+        preview.setWebChromeClient(new WebChromeClient());
+        setContentView(preview);
+        preview.loadUrl("file:///android_asset/site/index.html");
+    }
     private int dp(float n) { return (int)(n * getResources().getDisplayMetrics().density); }
     private TextView label(String text, int size) {
         TextView t = new TextView(this); t.setText(text); t.setTextSize(size);
