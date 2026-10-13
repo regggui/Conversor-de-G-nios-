@@ -1,9 +1,21 @@
 # Conversor de Gênios
 
-Projeto independente para transformar projetos HTML em aplicativos Android (APK).
+Projeto independente para Android: importar arquivos HTML ou projetos ZIP e abrir a prévia dentro de uma WebView.
 
-## Estado atual
+## O que esta primeira versão faz
+- Importa um arquivo HTML isolado.
+- Importa ZIP e extrai os arquivos com proteção contra caminhos fora da pasta.
+- Procura `index.html` dentro do projeto.
+- Abre a prévia do projeto com suporte a JavaScript e armazenamento local.
+- Tem workflow GitHub Actions para compilar o aplicativo Android de teste e guardar o APK como artefato.
 
-Este repositório está sendo preparado. O primeiro objetivo é empacotar projetos HTML/CSS/JavaScript em um aplicativo Android usando WebView e gerar um APK de teste por integração contínua.
+## Limitação importante
+Esta versão **não transforma ainda o projeto importado em um APK próprio**. Ela é um aplicativo Android que abre a prévia do HTML importado. O próximo passo é implementar um empacotador que gere um projeto Android para cada HTML/ZIP e automatizar sua compilação. Não exponha tokens do GitHub no aplicativo.
 
-**Importante:** o APK do conversor e a conversão de projetos importados são etapas distintas. Nenhum APK é considerado pronto até que a compilação e a instalação sejam verificadas.
+## Como obter o APK de teste
+1. Abra a aba **Actions** deste repositório.
+2. Selecione **Build Android APK** e toque em **Run workflow**.
+3. Aguarde a execução ficar verde.
+4. Abra a execução concluída e baixe o artefato `Conversor-de-Genios-debug-apk`.
+
+Este é um APK de depuração para teste, não uma versão pronta para publicação na Play Store.
