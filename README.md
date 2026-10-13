@@ -15,7 +15,7 @@ O fluxo **Build APK from HTML ZIP** empacota um projeto web em um APK Android us
 **Como usar no GitHub pelo celular:**
 1. Abra a página Code do repositório.
 2. Use o menu de adicionar arquivo para enviar `input-project.zip` à raiz do repositório e faça commit.
-3. Abra **Actions** → **Build APK from HTML ZIP** → **Run workflow**.
+3. O envio do ZIP dispara automaticamente o fluxo **Build APK from HTML ZIP**. Se preferir, também pode iniciá-lo em **Actions**.
 4. Quando a execução terminar com sucesso, abra a execução e baixe o artefato **APK-do-projeto-HTML**.
 
 ## Limitações importantes
