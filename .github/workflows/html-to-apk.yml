@@ -10,6 +10,7 @@ on:
   push:
     paths:
       - 'input-project.zip'
+      - '.github/workflows/html-to-apk.yml'
 jobs:
   build-html-apk:
     runs-on: ubuntu-latest
@@ -17,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create demo HTML project for pipeline test
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_demo_if_missing && !hashFiles('input-project.zip') }}
+        if: ${{ !hashFiles('input-project.zip') && (github.event_name != 'workflow_dispatch' || inputs.build_demo_if_missing) }}
         run: |
           python3 - <<'PY'
           import zipfile
