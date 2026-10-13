@@ -1,6 +1,10 @@
 name: Build APK from HTML ZIP
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'input-project.zip'
+      - '.github/workflows/html-to-apk.yml'
 jobs:
   build-html-apk:
     runs-on: ubuntu-latest
