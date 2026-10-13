@@ -1,21 +1,25 @@
 # Conversor de Gênios
 
-Projeto independente para Android: importar arquivos HTML ou projetos ZIP e abrir a prévia dentro de uma WebView.
+Projeto independente para Android: importar HTML ou ZIP, abrir a prévia e preparar um APK Android que abre o projeto web empacotado.
 
-## O que esta primeira versão faz
-- Importa um arquivo HTML isolado.
-- Importa ZIP e extrai os arquivos com proteção contra caminhos fora da pasta.
-- Procura `index.html` dentro do projeto.
-- Abre a prévia do projeto com suporte a JavaScript e armazenamento local.
-- Tem workflow GitHub Actions para compilar o aplicativo Android de teste e guardar o APK como artefato.
+## Fluxos de compilação
 
-## Limitação importante
-Esta versão **não transforma ainda o projeto importado em um APK próprio**. Ela é um aplicativo Android que abre a prévia do HTML importado. O próximo passo é implementar um empacotador que gere um projeto Android para cada HTML/ZIP e automatizar sua compilação. Não exponha tokens do GitHub no aplicativo.
+### 1. APK do próprio Conversor
+O fluxo **Build Android APK** compila o aplicativo Conversor de Gênios.
 
-## Como obter o APK de teste
-1. Abra a aba **Actions** deste repositório.
-2. Selecione **Build Android APK** e toque em **Run workflow**.
-3. Aguarde a execução ficar verde.
-4. Abra a execução concluída e baixe o artefato `Conversor-de-Genios-debug-apk`.
+### 2. APK a partir de um projeto HTML/ZIP
+O fluxo **Build APK from HTML ZIP** empacota um projeto web em um APK Android usando WebView.
 
-Este é um APK de depuração para teste, não uma versão pronta para publicação na Play Store.
+**Formato de entrada:** um arquivo chamado `input-project.zip` na raiz do repositório, com um `index.html` e os recursos do projeto (CSS, JavaScript, imagens etc.). Se o index estiver numa subpasta, o fluxo tenta colocar essa pasta na raiz do projeto empacotado.
+
+**Como usar no GitHub pelo celular:**
+1. Abra a página Code do repositório.
+2. Use o menu de adicionar arquivo para enviar `input-project.zip` à raiz do repositório e faça commit.
+3. Abra **Actions** → **Build APK from HTML ZIP** → **Run workflow**.
+4. Quando a execução terminar com sucesso, abra a execução e baixe o artefato **APK-do-projeto-HTML**.
+
+## Limitações importantes
+- O fluxo de APK HTML exige enviar o ZIP ao repositório e iniciar a compilação no GitHub; o aplicativo Android ainda não compila APKs localmente nem envia arquivos para o GitHub automaticamente.
+- O APK gerado abre o HTML empacotado por WebView; ele não converte automaticamente recursos web que dependam de servidores externos, APIs ou funcionalidades nativas Android.
+- O resultado é um APK de depuração para testes, não uma versão assinada para publicação na Play Store.
+- Não coloque senhas, chaves privadas ou tokens no HTML/ZIP.
