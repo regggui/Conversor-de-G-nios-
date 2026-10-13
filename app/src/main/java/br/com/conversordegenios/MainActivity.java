@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.database.Cursor;
 import android.provider.OpenableColumns;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -15,10 +14,8 @@ import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
 import android.widget.Toast;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -97,7 +94,9 @@ public class MainActivity extends Activity {
             ZipEntry entry; byte[] buffer=new byte[8192];
             while((entry=zis.getNextEntry())!=null) {
                 File out=new File(dest,entry.getName()).getCanonicalFile();
-                if(!out.toPath().startsWith(dest.getCanonicalPath()+File.separator) && !out.equals(dest.getCanonicalFile())) throw new IOException("ZIP contém caminho inseguro");
+                String base = dest.getCanonicalPath() + File.separator;
+                String target = out.getCanonicalPath();
+                if(!target.startsWith(base)) throw new IOException("ZIP contém caminho inseguro");
                 if(entry.isDirectory()) out.mkdirs();
                 else { File parent=out.getParentFile(); if(parent!=null)parent.mkdirs();
                     try(OutputStream os=new FileOutputStream(out)){int n;while((n=zis.read(buffer))>0)os.write(buffer,0,n);}
