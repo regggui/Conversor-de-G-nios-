@@ -225,6 +225,16 @@ public class MainActivity extends Activity {
         TextView title = label("Prévia: " + projectName, 13);
         page.addView(title);
 
+        LinearLayout zoom = new LinearLayout(this);
+        zoom.setOrientation(LinearLayout.HORIZONTAL);
+        zoom.addView(button("A− Diminuir", () -> changeZoom(-1)),
+            new LinearLayout.LayoutParams(0, dp(48), 1));
+        zoom.addView(button("100%", this::resetZoom),
+            new LinearLayout.LayoutParams(0, dp(48), 1));
+        zoom.addView(button("A+ Aumentar", () -> changeZoom(1)),
+            new LinearLayout.LayoutParams(0, dp(48), 1));
+        page.addView(zoom);
+
         preview = new WebView(this);
         WebSettings s = preview.getSettings();
         s.setJavaScriptEnabled(true);
@@ -232,12 +242,36 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setJavaScriptCanOpenWindowsAutomatically(true);
+        s.setBuiltInZoomControls(true);
+        s.setDisplayZoomControls(false);
         preview.setWebViewClient(new WebViewClient());
         preview.setWebChromeClient(new WebChromeClient());
         page.addView(preview, new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         setContentView(page);
         preview.loadUrl(Uri.fromFile(index).toString());
+    }
+
+    private void changeZoom(int direction) {
+        if (preview == null) {
+            Toast.makeText(this, "Abra um projeto primeiro.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (direction > 0) preview.zoomIn();
+        else preview.zoomOut();
+    }
+
+    private void resetZoom() {
+        if (preview == null) {
+            Toast.makeText(this, "Abra um projeto primeiro.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        preview.getSettings().setTextZoom(100);
+        preview.zoomOut();
+        preview.zoomOut();
+        preview.zoomOut();
+        preview.zoomOut();
+        Toast.makeText(this, "Zoom reajustado. Se precisar, use A+ ou A−.", Toast.LENGTH_SHORT).show();
     }
 
     private void deleteTree(File f) {
