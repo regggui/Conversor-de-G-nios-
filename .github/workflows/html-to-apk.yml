@@ -1,6 +1,12 @@
 name: Build APK from HTML ZIP
 on:
   workflow_dispatch:
+    inputs:
+      build_demo_if_missing:
+        description: "Gerar um projeto de demonstração se input-project.zip ainda não existir"
+        required: true
+        type: boolean
+        default: true
   push:
     paths:
       - 'input-project.zip'
@@ -10,18 +16,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Create demo HTML project for pipeline test
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_demo_if_missing && !hashFiles('input-project.zip') }}
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          html = """<!doctype html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>APK HTML de Teste</title>
+            <style>
+              * { box-sizing: border-box; }
+              body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; font-family: system-ui, sans-serif; color: #f5f7ff; background: linear-gradient(145deg,#101320,#27345a); }
+              main { max-width: 520px; width: 100%; padding: 28px; border-radius: 22px; background: #ffffff12; border: 1px solid #ffffff30; text-align: center; }
+              button { border: 0; border-radius: 12px; padding: 14px 20px; font-size: 16px; font-weight: 700; background: #75e0b2; color: #122033; }
+            </style>
+          </head>
+          <body><main><h1>APK HTML funcionando!</h1><p>Este aplicativo foi gerado pelo fluxo HTML → APK.</p><p id="count">Toques no botão: 0</p><button onclick="document.getElementById('count').textContent='Toques no botão: '+(++n)">Testar botão</button></main><script>let n=0;</script></body>
+          </html>"""
+          with zipfile.ZipFile("input-project.zip", "w", zipfile.ZIP_DEFLATED) as z:
+              z.writestr("index.html", html)
+          print("ZIP de demonstração criado para testar a geração de APK.")
+          PY
       - name: Verify input project
         run: |
           if [ ! -f input-project.zip ]; then
-            echo "::error::Envie um arquivo chamado input-project.zip para a raiz do repositório antes de executar este fluxo."
+            echo "::error::Envie um arquivo chamado input-project.zip para a raiz do repositório, ou execute manualmente com a opção de demonstração ativada."
             exit 1
           fi
       - name: Extract web project safely
         run: |
           python3 - <<'PY'
-          import os, zipfile
+          import os, zipfile, shutil
           archive = 'input-project.zip'
           dest = 'app/src/main/assets/site'
+          if os.path.exists(dest):
+              shutil.rmtree(dest)
           os.makedirs(dest, exist_ok=True)
           root = os.path.realpath(dest)
           with zipfile.ZipFile(archive) as z:
@@ -34,7 +66,7 @@ jobs:
                   else:
                       os.makedirs(os.path.dirname(target), exist_ok=True)
                       with z.open(item) as src, open(target, 'wb') as out:
-                          out.write(src.read())
+                          shutil.copyfileobj(src, out)
           candidates = []
           for base, dirs, files in os.walk(dest):
               if 'index.html' in files:
@@ -43,7 +75,6 @@ jobs:
               raise SystemExit('Não encontrei index.html no ZIP.')
           chosen = candidates[0]
           if chosen != os.path.join(dest, 'index.html'):
-              import shutil
               parent = os.path.dirname(chosen)
               for name in os.listdir(parent):
                   src = os.path.join(parent, name)
