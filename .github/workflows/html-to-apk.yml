@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - 'input-project.zip'
-      - '.github/workflows/html-to-apk.yml'
 jobs:
   build-html-apk:
     runs-on: ubuntu-latest
