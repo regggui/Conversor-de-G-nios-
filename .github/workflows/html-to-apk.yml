@@ -1,0 +1,70 @@
+name: Build APK from HTML ZIP
+on:
+  workflow_dispatch:
+jobs:
+  build-html-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify input project
+        run: |
+          if [ ! -f input-project.zip ]; then
+            echo "::error::Envie um arquivo chamado input-project.zip para a raiz do repositório antes de executar este fluxo."
+            exit 1
+          fi
+      - name: Extract web project safely
+        run: |
+          python3 - <<'PY'
+          import os, zipfile
+          archive = 'input-project.zip'
+          dest = 'app/src/main/assets/site'
+          os.makedirs(dest, exist_ok=True)
+          root = os.path.realpath(dest)
+          with zipfile.ZipFile(archive) as z:
+              for item in z.infolist():
+                  target = os.path.realpath(os.path.join(dest, item.filename))
+                  if target != root and not target.startswith(root + os.sep):
+                      raise SystemExit('ZIP contém caminho inseguro: ' + item.filename)
+                  if item.is_dir():
+                      os.makedirs(target, exist_ok=True)
+                  else:
+                      os.makedirs(os.path.dirname(target), exist_ok=True)
+                      with z.open(item) as src, open(target, 'wb') as out:
+                          out.write(src.read())
+          candidates = []
+          for base, dirs, files in os.walk(dest):
+              if 'index.html' in files:
+                  candidates.append(os.path.join(base, 'index.html'))
+          if not candidates:
+              raise SystemExit('Não encontrei index.html no ZIP.')
+          chosen = candidates[0]
+          if chosen != os.path.join(dest, 'index.html'):
+              import shutil
+              parent = os.path.dirname(chosen)
+              for name in os.listdir(parent):
+                  src = os.path.join(parent, name)
+                  target = os.path.join(dest, name)
+                  if os.path.exists(target):
+                      if os.path.isdir(target): shutil.rmtree(target)
+                      else: os.remove(target)
+                  shutil.move(src, target)
+          print('Projeto preparado em', dest)
+          PY
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build project APK
+        run: gradle assembleDebug
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk Conversor-HTML-Projeto.apk
+      - name: Upload generated APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK-do-projeto-HTML
+          path: Conversor-HTML-Projeto.apk
+          if-no-files-found: error
