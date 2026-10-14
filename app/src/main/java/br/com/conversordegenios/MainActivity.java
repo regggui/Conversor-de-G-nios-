@@ -117,6 +117,8 @@ public class MainActivity extends Activity {
         root.addView(button("📂 Selecionar arquivo HTML ou ZIP", this::pickProject));
         root.addView(button("▶ Abrir último projeto importado", this::openLast));
         root.addView(button("📦 Preparar projeto para gerar APK", this::exportProjectZip));
+        root.addView(button("🌐 Enviar ZIP ao GitHub", () -> openExternal("https://github.com/regggui/Conversor-de-G-nios-/upload/main")));
+        root.addView(button("⬇ Ver APKs gerados", () -> openExternal("https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml")));
         root.addView(button("ℹ Como usar", this::showHelp));
         status = label(lastIndex == null ? "Pronto para importar." : "Último projeto disponível: " + lastIndex.getName(), 14);
         root.addView(status);
@@ -240,18 +242,23 @@ public class MainActivity extends Activity {
             zip.finish();
             new android.app.AlertDialog.Builder(this)
                 .setTitle("Projeto preparado")
-                .setMessage("O ZIP foi criado como input-project.zip. Próximo passo: envie-o à raiz do repositório GitHub e confirme o commit. A compilação inicia automaticamente; depois, abra Actions e baixe o artefato APK-do-projeto-HTML. O app ainda não faz upload/download automático porque isso exige configurar autorização segura da conta.")
-                .setPositiveButton("Abrir GitHub Actions", (d, w) -> {
-                    try {
-                        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml"));
-                        startActivity(open);
-                    } catch (Exception ignored) {}
-                })
+                .setMessage("O arquivo input-project.zip está pronto. Agora envie esse ZIP para a raiz do repositório GitHub e confirme o commit. Isso inicia a compilação. Depois, abra Ver APKs gerados e baixe o artefato APK-do-projeto-HTML quando o fluxo terminar. O envio e o download ainda são manuais para proteger sua conta.")
+                .setPositiveButton("Enviar ZIP ao GitHub", (d, w) -> openExternal("https://github.com/regggui/Conversor-de-G-nios-/upload/main"))
+                .setNeutralButton("Ver compilações", (d, w) -> openExternal("https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml"))
                 .setNegativeButton("Fechar", (d, w) -> d.dismiss())
                 .show();
         } catch (Exception e) {
             String msg = e.getMessage() == null ? "erro ao criar ZIP" : e.getMessage();
             Toast.makeText(this, "Falha ao preparar projeto: " + msg, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void openExternal(String url) {
+        try {
+            Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(open);
+        } catch (Exception e) {
+            Toast.makeText(this, "Não consegui abrir o navegador.", Toast.LENGTH_LONG).show();
         }
     }
 
