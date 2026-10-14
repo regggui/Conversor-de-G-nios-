@@ -21,9 +21,12 @@ import android.graphics.Color;
 import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+import android.os.Environment;
 
 public class MainActivity extends Activity {
     private static final int PICK_PROJECT = 72;
+    private static final int SAVE_PROJECT_ZIP = 73;
     private LinearLayout root;
     private TextView status;
     private WebView preview;
@@ -113,6 +116,7 @@ public class MainActivity extends Activity {
         root.addView(label("Importe e teste projetos HTML ou ZIP no Android.", 16));
         root.addView(button("📂 Selecionar arquivo HTML ou ZIP", this::pickProject));
         root.addView(button("▶ Abrir último projeto importado", this::openLast));
+        root.addView(button("📦 Preparar projeto para gerar APK", this::exportProjectZip));
         root.addView(button("ℹ Como usar", this::showHelp));
         status = label(lastIndex == null ? "Pronto para importar." : "Último projeto disponível: " + lastIndex.getName(), 14);
         root.addView(status);
@@ -150,6 +154,10 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SAVE_PROJECT_ZIP && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            saveProjectZip(data.getData());
+            return;
+        }
         if (requestCode != PICK_PROJECT || resultCode != RESULT_OK || data == null || data.getData() == null) return;
         Uri uri = data.getData();
         String name = getName(uri);
@@ -186,6 +194,64 @@ public class MainActivity extends Activity {
                 .setMessage(msg + "\n\nPara um projeto completo, escolha o ZIP que contém o index.html e os arquivos usados por ele.")
                 .setPositiveButton("OK", (d, w) -> d.dismiss())
                 .show();
+        }
+    }
+
+    private void exportProjectZip() {
+        File index = lastIndex != null && lastIndex.isFile() ? lastIndex : findIndex(projectDir);
+        if (index == null) {
+            Toast.makeText(this, "Importe um projeto HTML ou ZIP primeiro.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/zip");
+        intent.putExtra(Intent.EXTRA_TITLE, "input-project.zip");
+        startActivityForResult(intent, SAVE_PROJECT_ZIP);
+    }
+
+    private void zipDirectory(File base, File current, ZipOutputStream zos) throws IOException {
+        File[] files = current.listFiles();
+        if (files == null) return;
+        byte[] buffer = new byte[8192];
+        for (File file : files) {
+            String path = base.toURI().relativize(file.toURI()).getPath();
+            if (file.isDirectory()) {
+                if (!path.endsWith("/")) path += "/";
+                zos.putNextEntry(new ZipEntry(path));
+                zos.closeEntry();
+                zipDirectory(base, file, zos);
+            } else {
+                zos.putNextEntry(new ZipEntry(path));
+                try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+                    int count;
+                    while ((count = in.read(buffer)) != -1) zos.write(buffer, 0, count);
+                }
+                zos.closeEntry();
+            }
+        }
+    }
+
+    private void saveProjectZip(Uri destination) {
+        try (OutputStream raw = getContentResolver().openOutputStream(destination);
+             ZipOutputStream zip = new ZipOutputStream(new BufferedOutputStream(raw))) {
+            if (raw == null) throw new IOException("não consegui criar o arquivo ZIP");
+            zipDirectory(projectDir, projectDir, zip);
+            zip.finish();
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Projeto preparado")
+                .setMessage("O ZIP foi criado como input-project.zip. Para compilar, envie esse arquivo para a raiz do repositório Conversor-de-G-nios- no GitHub; o fluxo HTML → APK inicia automaticamente e publica o APK nos artefatos da compilação.")
+                .setPositiveButton("Abrir GitHub Actions", (d, w) -> {
+                    try {
+                        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml"));
+                        startActivity(open);
+                    } catch (Exception ignored) {}
+                })
+                .setNegativeButton("Fechar", (d, w) -> d.dismiss())
+                .show();
+        } catch (Exception e) {
+            String msg = e.getMessage() == null ? "erro ao criar ZIP" : e.getMessage();
+            Toast.makeText(this, "Falha ao preparar projeto: " + msg, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -253,6 +319,7 @@ public class MainActivity extends Activity {
         actions.addView(button("← Início", this::showHome), new LinearLayout.LayoutParams(0, dp(52), 1));
         actions.addView(button("+ Importar", this::pickProject), new LinearLayout.LayoutParams(0, dp(52), 1));
         page.addView(actions);
+        page.addView(button("📦 Preparar projeto para gerar APK", this::exportProjectZip));
         TextView title = label("Prévia: " + projectName, 13);
         page.addView(title);
 
