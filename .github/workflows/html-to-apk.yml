@@ -46,6 +46,38 @@ jobs:
             echo "::error::Envie um arquivo chamado input-project.zip para a raiz do repositório. A demonstração só é criada se você a habilitar explicitamente na execução manual."
             exit 1
           fi
+      - name: Validate project archive
+        run: |
+          python3 - <<'PY'
+          import os, zipfile
+          path = 'input-project.zip'
+          try:
+              with zipfile.ZipFile(path) as z:
+                  entries = z.infolist()
+                  if not entries:
+                      raise SystemExit('O ZIP está vazio.')
+                  total = 0
+                  found_index = False
+                  for entry in entries:
+                      name = entry.filename.replace('\\\\', '/')
+                      if name.startswith('/') or any(part == '..' for part in name.split('/')):
+                          raise SystemExit('Caminho inseguro no ZIP: ' + entry.filename)
+                      if entry.flag_bits & 1:
+                          raise SystemExit('ZIP protegido por senha não é aceito: ' + entry.filename)
+                      total += entry.file_size
+                      if os.path.basename(name).lower() == 'index.html':
+                          found_index = True
+                  if total > 200 * 1024 * 1024:
+                      raise SystemExit('O projeto descompactado excede o limite de 200 MB.')
+                  if not found_index:
+                      raise SystemExit('Não encontrei index.html no ZIP. Inclua a página inicial e os recursos do projeto.')
+                  bad = z.testzip()
+                  if bad:
+                      raise SystemExit('Arquivo corrompido dentro do ZIP: ' + bad)
+                  print(f'ZIP válido: {len(entries)} entradas, {total} bytes descompactados.')
+          except zipfile.BadZipFile:
+              raise SystemExit('input-project.zip não é um ZIP válido.')
+          PY
       - name: Extract web project safely
         run: |
           python3 - <<'PY'
@@ -102,3 +134,18 @@ jobs:
           name: APK-do-projeto-HTML
           path: Conversor-HTML-Projeto.apk
           if-no-files-found: error
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo "## Conversão HTML → APK"
+            echo ""
+            if [ -f Conversor-HTML-Projeto.apk ]; then
+              echo "✅ APK gerado: `Conversor-HTML-Projeto.apk`"
+              echo "Baixe o artefato **APK-do-projeto-HTML** nesta execução."
+            else
+              echo "❌ A conversão não produziu um APK. Consulte a etapa marcada como falha nos logs."
+            fi
+            echo ""
+            echo "O APK é um pacote de teste (debug). Projetos que dependam de serviços externos continuam precisando desses serviços."
+          } >> "$GITHUB_STEP_SUMMARY"
