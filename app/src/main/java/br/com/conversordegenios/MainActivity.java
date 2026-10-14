@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
     private void showHelp() {
         new android.app.AlertDialog.Builder(this)
             .setTitle("Como usar")
-            .setMessage("1. Toque em Selecionar arquivo HTML ou ZIP.\n2. Escolha o arquivo no gerenciador do celular.\n3. Para projetos com imagens, CSS e JavaScript, importe o ZIP completo com index.html dentro.\n4. Use os botões no topo da prévia para voltar ou importar outro projeto.\n\nEste teste abre a prévia; ele ainda não compila APKs diretamente no celular.")
+            .setMessage("1. Toque em Selecionar arquivo HTML ou ZIP.\n2. Escolha o arquivo no gerenciador do celular.\n3. Para projetos com imagens, CSS e JavaScript, importe o ZIP completo com index.html dentro.\n4. Use os botões no topo da prévia para voltar ou importar outro projeto.\n\nEste app importa e prepara o projeto. O envio ao GitHub e o download do APK ainda exigem etapas manuais.")
             .setPositiveButton("Entendi", (d, w) -> d.dismiss())
             .show();
     }
@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
             zip.finish();
             new android.app.AlertDialog.Builder(this)
                 .setTitle("Projeto preparado")
-                .setMessage("O ZIP foi criado como input-project.zip. Para compilar, envie esse arquivo para a raiz do repositório Conversor-de-G-nios- no GitHub; o fluxo HTML → APK inicia automaticamente e publica o APK nos artefatos da compilação.")
+                .setMessage("O ZIP foi criado como input-project.zip. Próximo passo: envie-o à raiz do repositório GitHub e confirme o commit. A compilação inicia automaticamente; depois, abra Actions e baixe o artefato APK-do-projeto-HTML. O app ainda não faz upload/download automático porque isso exige configurar autorização segura da conta.")
                 .setPositiveButton("Abrir GitHub Actions", (d, w) -> {
                     try {
                         Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml"));
