@@ -59,7 +59,7 @@ jobs:
                   total = 0
                   found_index = False
                   for entry in entries:
-                      name = entry.filename.replace('\\\\', '/')
+                      name = entry.filename.replace('\\', '/')
                       if name.startswith('/') or any(part == '..' for part in name.split('/')):
                           raise SystemExit('Caminho inseguro no ZIP: ' + entry.filename)
                       if entry.flag_bits & 1:
