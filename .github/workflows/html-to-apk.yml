@@ -6,11 +6,10 @@ on:
         description: "Gerar um projeto de demonstração se input-project.zip ainda não existir"
         required: true
         type: boolean
-        default: true
+        default: false
   push:
     paths:
       - 'input-project.zip'
-      - '.github/workflows/html-to-apk.yml'
 jobs:
   build-html-apk:
     runs-on: ubuntu-latest
@@ -18,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create demo HTML project for pipeline test
-        if: ${{ !hashFiles('input-project.zip') && (github.event_name != 'workflow_dispatch' || inputs.build_demo_if_missing) }}
+        if: ${{ !hashFiles('input-project.zip') && github.event_name == 'workflow_dispatch' && inputs.build_demo_if_missing }}
         run: |
           python3 - <<'PY'
           import zipfile
@@ -44,7 +43,7 @@ jobs:
       - name: Verify input project
         run: |
           if [ ! -f input-project.zip ]; then
-            echo "::error::Envie um arquivo chamado input-project.zip para a raiz do repositório, ou execute manualmente com a opção de demonstração ativada."
+            echo "::error::Envie um arquivo chamado input-project.zip para a raiz do repositório. A demonstração só é criada se você a habilitar explicitamente na execução manual."
             exit 1
           fi
       - name: Extract web project safely
