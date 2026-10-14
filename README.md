@@ -7,7 +7,8 @@ Projeto independente para Android: importar HTML ou ZIP, abrir a prévia e prepa
 - O aplicativo Android importa arquivos `.html`, `.htm` e `.zip` pelo seletor de arquivos do próprio celular.
 - A prévia abre no WebView do aplicativo.
 - O app consegue exportar o projeto importado como `input-project.zip`.
-- O workflow `Build APK from HTML ZIP` compila o ZIP que estiver na raiz do repositório e publica o APK como artefato do GitHub Actions.
+- O workflow `Build APK from HTML ZIP` valida o ZIP (integridade, caminhos, tamanho e presença de `index.html`), compila o projeto e publica o APK como artefato do GitHub Actions.
+- A tela inicial do app tem atalhos diretos para enviar o ZIP ao repositório e abrir as compilações.
 - O workflow não usa mais uma demonstração automaticamente: em execução manual, a opção de demo começa desativada. A demonstração precisa ser habilitada de propósito.
 
 ## Gerar APK de um projeto real
@@ -18,7 +19,9 @@ Projeto independente para Android: importar HTML ou ZIP, abrir a prévia e prepa
 4. O envio de `input-project.zip` inicia automaticamente o workflow **Build APK from HTML ZIP**.
 5. Quando a execução terminar, abra a execução em Actions e baixe o artefato **APK-do-projeto-HTML**.
 
-Workflow: https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml
+Enviar o ZIP: https://github.com/regggui/Conversor-de-G-nios-/upload/main
+
+Ver compilações: https://github.com/regggui/Conversor-de-G-nios-/actions/workflows/html-to-apk.yml
 
 ## Limitação de integração que ainda existe
 
